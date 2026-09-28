@@ -1,0 +1,28 @@
+{
+  "name": "spout-settlement",
+  "private": true,
+  "packageManager": "pnpm@9.15.9",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "lint": "turbo run lint",
+    "test": "turbo run test",
+    "typecheck": "turbo run typecheck",
+    "api": "pnpm --filter @spout/api",
+    "web": "pnpm --filter @spout/web",
+    "place-order": "pnpm --filter @spout/shared build && pnpm --filter @spout/api place-order",
+    "replay-event": "pnpm --filter @spout/shared build && pnpm --filter @spout/api replay-event",
+    "reconcile": "pnpm --filter @spout/shared build && pnpm --filter @spout/api reconcile",
+    "scenario": "pnpm --filter @spout/shared build && pnpm --filter @spout/api scenario",
+    "alpaca-account": "pnpm --filter @spout/shared build && pnpm --filter @spout/api alpaca-account",
+    "concurrency": "pnpm --filter @spout/shared build && pnpm --filter @spout/api concurrency",
+    "shared:build": "pnpm --filter @spout/shared build"
+  },
+  "devDependencies": {
+    "turbo": "^2.5.4",
+    "typescript": "^5.8.3"
+  }
+}

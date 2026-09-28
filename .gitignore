@@ -1,0 +1,17 @@
+node_modules/
+dist/
+.next/
+.turbo/
+coverage/
+.env
+.env.*
+!.env.example
+*.log
+reference/
+keys/*.json
+!keys/.gitkeep
+devnet-keypair.json
+.playwright-mcp/
+.vercel/
+.deploy-web/
+.notes/

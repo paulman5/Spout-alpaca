@@ -1,0 +1,126 @@
+x-backend: &backend
+  build:
+    context: .
+    dockerfile: apps/api/Dockerfile
+  image: spout-settlement/api
+  env_file:
+    - path: .env
+      required: false
+  environment: &backend-env
+    DATABASE_URL: postgres://spout:spout@postgres:5432/spout
+    MOCK_BROKER_URL: http://mock-broker:4010
+    KEYPAIR_PATH: /keys/devnet-keypair.json
+    HEALTH_PORT: "4100"
+  volumes:
+    - ./keys:/keys:ro
+  restart: unless-stopped
+
+x-healthcheck: &probe
+  interval: 5s
+  timeout: 3s
+  retries: 20
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: spout
+      POSTGRES_PASSWORD: spout
+      POSTGRES_DB: spout
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U spout -d spout"]
+      interval: 2s
+      timeout: 3s
+      retries: 20
+
+  mock-broker:
+    <<: *backend
+    environment:
+      ROLE: mock-broker
+      MOCK_BROKER_PORT: "4010"
+    ports:
+      - "4010:4010"
+    healthcheck:
+      <<: *probe
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:4010/health >/dev/null || exit 1"]
+
+  # The api runs the migrations; every other backend role waits for it to be healthy.
+  api:
+    <<: *backend
+    environment:
+      <<: *backend-env
+      ROLE: api
+      PORT: "4000"
+    ports:
+      - "4000:4000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      <<: *probe
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:4000/health >/dev/null || exit 1"]
+
+  listener:
+    <<: *backend
+    environment:
+      <<: *backend-env
+      ROLE: listener
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      <<: *probe
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:4100/health >/dev/null || exit 1"]
+
+  worker:
+    <<: *backend
+    environment:
+      <<: *backend-env
+      ROLE: worker
+    deploy:
+      replicas: 2
+    depends_on:
+      api:
+        condition: service_healthy
+      mock-broker:
+        condition: service_healthy
+    healthcheck:
+      <<: *probe
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:4100/health >/dev/null || exit 1"]
+
+  reconciler:
+    <<: *backend
+    environment:
+      <<: *backend-env
+      ROLE: reconciler
+    depends_on:
+      api:
+        condition: service_healthy
+      mock-broker:
+        condition: service_healthy
+    healthcheck:
+      <<: *probe
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:4100/health >/dev/null || exit 1"]
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      args:
+        # Baked into the static bundle at build time; the console also accepts ?api=<url> at runtime.
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:4000}
+    image: spout-settlement/web
+    ports:
+      - "3000:3000"
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  pgdata:

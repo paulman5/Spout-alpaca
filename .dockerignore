@@ -1,0 +1,16 @@
+node_modules
+**/node_modules
+**/dist
+**/.next
+**/.turbo
+reference
+keys
+.env
+.env.*
+!.env.example
+.git
+*.log
+.deploy-web
+.vercel
+.playwright-mcp
+**/.env.local

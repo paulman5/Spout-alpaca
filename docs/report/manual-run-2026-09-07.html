@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Spout settlement worker · Manual end-to-end run · 7 September 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;0,6..72,500;1,6..72,400&family=Inter:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  @page { size: A4; margin: 0; }
+  :root {
+    --ink: #070709; --paper: #eae7df;
+    --page: #f3f0e8; --page-panel: #faf8f2; --text: #15151b;
+    --muted: rgba(21,21,27,.66); --faint: rgba(21,21,27,.45); --rule: rgba(21,21,27,.16); --rule-soft: rgba(21,21,27,.08);
+    --accent: #1f8f86; --accent-dark: #39c5bb; --warn: #a8731a;
+    --serif: "Newsreader", "Iowan Old Style", Georgia, serif;
+    --sans: "Inter", system-ui, sans-serif;
+    --mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body { font-family: var(--sans); font-size: 10.5pt; line-height: 1.6; color: var(--text); background: var(--page); }
+  .page { width: 210mm; height: 297mm; padding: 18mm 18mm 20mm; position: relative; page-break-after: always; background: var(--page); overflow: hidden; }
+  .page:last-child { page-break-after: auto; }
+
+  .cover { background: var(--ink); color: var(--paper); display: flex; flex-direction: column; justify-content: space-between; }
+  .cover h1 { font-family: var(--serif); font-weight: 300; font-size: 44pt; line-height: 1.02; letter-spacing: -.022em; margin: 22mm 0 6mm; max-width: 19ch; }
+  .cover h1 em { font-style: italic; font-weight: 400; }
+  .cover .lede { color: rgba(234,231,223,.62); font-size: 12pt; max-width: 56ch; line-height: 1.7; }
+  .cover dl { display: grid; grid-template-columns: max-content 1fr; gap: 2mm 8mm; margin: 0; font-family: var(--mono); font-size: 8pt; }
+  .cover dt { color: rgba(234,231,223,.4); letter-spacing: .16em; text-transform: uppercase; font-size: 7pt; line-height: 2.2; }
+  .cover dd { margin: 0; color: rgba(234,231,223,.78); line-height: 2.2; word-break: break-all; }
+  .cover .rule { border-top: 1px solid rgba(234,231,223,.14); margin: 10mm 0; position: relative; }
+  .cover .rule::after { content: ""; position: absolute; left: 0; top: -1px; width: 3rem; height: 1px; background: var(--accent-dark); }
+  .cover .wordmark { font-family: var(--serif); font-size: 18pt; }
+  .cover .wordmark span { font-family: var(--mono); font-size: 7pt; letter-spacing: .22em; text-transform: uppercase; color: rgba(234,231,223,.4); margin-left: 8mm; }
+
+  .k { font-family: var(--mono); font-size: 7pt; font-weight: 500; letter-spacing: .18em; text-transform: uppercase; color: var(--faint); margin: 0; display: flex; align-items: center; gap: 3mm; }
+  .k::before { content: ""; width: 5mm; height: 1px; background: var(--accent); }
+  h2 { font-family: var(--serif); font-weight: 400; font-size: 20pt; line-height: 1.12; letter-spacing: -.01em; margin: 3mm 0 3mm; }
+  p { margin: 0 0 3mm; color: var(--muted); max-width: 70ch; }
+  table { width: 100%; border-collapse: collapse; margin: 2mm 0 4mm; border: 1px solid var(--rule); background: var(--page-panel); font-size: 8.6pt; }
+  th { text-align: left; padding: 2mm 3mm; border-bottom: 1px solid var(--rule); font-family: var(--mono); font-size: 6.5pt; font-weight: 500; letter-spacing: .16em; text-transform: uppercase; color: var(--faint); }
+  td { padding: 1.6mm 3mm; border-bottom: 1px solid var(--rule-soft); vertical-align: top; color: var(--muted); }
+  tr:last-child td { border-bottom: none; }
+  td.mono, .mono { font-family: var(--mono); font-size: 8pt; }
+  td.t { font-family: var(--mono); font-size: 8pt; color: var(--faint); white-space: nowrap; }
+  td.tr { font-family: var(--mono); font-size: 7.6pt; color: var(--text); white-space: nowrap; }
+  td.ok { color: var(--accent); font-family: var(--mono); font-size: 8pt; }
+  .chip { display: inline-block; font-family: var(--mono); font-size: 6.6pt; letter-spacing: .12em; text-transform: uppercase; border: 1px solid var(--rule); border-radius: 999px; padding: .4mm 2mm; color: var(--text); white-space: nowrap; }
+  .chip.seal { border-color: rgba(31,143,134,.5); }
+  .chip.warn { color: var(--warn); border-color: rgba(168,115,26,.5); }
+  a { color: var(--text); text-decoration: underline; text-decoration-color: var(--accent); text-underline-offset: 2px; }
+  .meta { display: grid; grid-template-columns: max-content 1fr; gap: .5mm 6mm; font-family: var(--mono); font-size: 7.8pt; color: var(--muted); margin: 0 0 3mm; }
+  .meta b { font-weight: 500; color: var(--faint); letter-spacing: .12em; text-transform: uppercase; font-size: 6.5pt; }
+  .note { border: 1px solid rgba(31,143,134,.35); background: rgba(31,143,134,.05); padding: 3mm 4mm; margin: 4mm 0; font-size: 9.2pt; color: var(--muted); }
+  .note .k { margin-bottom: 1.5mm; }
+  .footer { position: absolute; left: 18mm; right: 18mm; bottom: 10mm; display: flex; justify-content: space-between; font-family: var(--mono); font-size: 6.6pt; letter-spacing: .14em; text-transform: uppercase; color: var(--faint); border-top: 1px solid var(--rule-soft); padding-top: 2mm; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 4mm; }
+  .stat { border: 1px solid var(--rule); background: var(--page-panel); padding: 3mm 4mm; }
+  .stat .k { margin-bottom: 1mm; }
+  .stat .v { font-family: var(--serif); font-weight: 300; font-size: 22pt; line-height: 1; }
+  .stat .n { font-size: 8.6pt; color: var(--muted); margin-top: 1mm; }
+</style>
+</head>
+<body>
+
+<section class="page cover">
+  <div>
+    <div class="wordmark">Spout <span>Settlement worker</span></div>
+    <h1>Every order, <em>accounted for.</em></h1>
+    <p class="lede">Manual end-to-end run on the hosted stack, 7 September 2026. Seven steps driven from the operator console: a normal order, a broker outage, a market closure, a kill switch, a reconciliation and a triple replay. Every observation in this report is copied from the order ledgers and can be verified on Solana devnet.</p>
+  </div>
+  <div>
+    <div class="rule"></div>
+    <dl>
+      <dt>Stack</dt><dd>NestJS · TypeORM · PostgreSQL · Solana devnet · Alpaca sandbox (mock during this run)</dd>
+      <dt>API</dt><dd>https://api-production-1d80.up.railway.app</dd>
+      <dt>Console</dt><dd>https://spout-settlement-console.vercel.app</dd>
+      <dt>Wallet</dt><dd>BLcWH9MWxKkFNNZj7mBm3vF7aiZieG3BnZMWXtoiktoC</dd>
+      <dt>Program</dt><dd>DB2h5equ9Qp2qaaeKyL9sL6RD8LAhZzjiSUYgnaW3aeF</dd>
+      <dt>Session</dt><dd>2026-09-07 · 13:47 to 14:27 UTC</dd>
+    </dl>
+  </div>
+</section>
+
+<section class="page">
+  <p class="k">01 · Summary</p>
+  <h2>Seven steps, one invariant: one trade, one settlement.</h2>
+  <p>The pipeline turns a devnet <span class="mono">BuyOrderCreated</span> into exactly one broker trade and exactly one on-chain settlement, whatever fails in between. Each step below injected one failure, or none, and the ledger recorded what happened.</p>
+  <div class="grid2" style="margin:4mm 0 5mm">
+    <div class="stat"><p class="k">Orders placed</p><div class="v">4</div><div class="n">3 settled, 1 refunded</div></div>
+    <div class="stat"><p class="k">Duplicate trades or settlements</p><div class="v">0</div><div class="n">also 0 alerts, breaker not tripped</div></div>
+  </div>
+  <table>
+    <thead><tr><th style="width:8mm">Step</th><th style="width:44mm">Action</th><th>Expected</th><th>Observed</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">1</td><td>Save the admin token, resume the workers</td><td><span class="mono">GET /workers</span> answers <span class="mono">paused: false</span></td><td class="ok">confirmed 13:47</td></tr>
+      <tr><td class="mono">2</td><td>Place an order (AAPL, 5 USDC) from the console</td><td><span class="chip seal">settled</span> in seconds, one broker order, one settlement</td><td class="ok">settled in 7 s, no retries</td></tr>
+      <tr><td class="mono">3</td><td>Simulator: HTTP 500 for 30 s, then an order</td><td>Retries with doubling delays, completion, no refund</td><td class="ok">5 retries (1.1, 2.1, 3.9, 8.1, 18.7 s), settled at +47 s</td></tr>
+      <tr><td class="mono">4</td><td>Simulator: market closed, then an order</td><td>Permanent rejection, on-chain refund, zero retries</td><td class="ok">refunded in 3 s, code market_closed</td></tr>
+      <tr><td class="mono">5</td><td>Pause the workers, place an order, resume</td><td>Order waits untouched, completes after resume</td><td class="ok">waited 4 min 47 s, settled 7 s after resume</td></tr>
+      <tr><td class="mono">6</td><td>Reconcile now</td><td>Report with no drift</td><td class="ok">scanned 9, no drift</td></tr>
+      <tr><td class="mono">7</td><td>Replay the step 2 event three times</td><td>Duplicates ignored, one settlement, broker count unchanged</td><td class="ok">3 × duplicate_event_ignored</td></tr>
+    </tbody>
+  </table>
+  <div class="note">
+    <p class="k">How to read the ledgers</p>
+    Each order carries an append-only ledger (<span class="mono">order_events</span>). A row with an arrow is a status change; a row without one is a fact worth auditing (a retry scheduled, a signature persisted, a duplicate ignored). The row and the status change are written in the same database transaction, so the story survives any crash. Actors: the listener (chain events), a worker (broker and settlement), the reconciler, or a replay.
+  </div>
+  <div class="footer"><span>Spout · settlement worker</span><span>manual run · 2026-09-07</span><span>2</span></div>
+</section>
+
+<section class="page">
+  <p class="k">02 · Normal order</p>
+  <h2>Seven seconds from the chain to the chain.</h2>
+  <div class="meta">
+    <b>order</b><span>1788788980019 · AAPL · 5.00 USDC</span>
+    <b>broker</b><span>02678640-73b1-4066-a163-657631473765 · filled 5.000000</span>
+    <b>created</b><span><a href="https://explorer.solana.com/tx/4CUnPZ6ZrdB4QjtkLFFuhK6235rJ7Rg86HsiqptFKLcK3ihj1ZH9qQtKxnVChr6tMCv3uKJPqWsz7V7zirzAsiVm?cluster=devnet">4CUnPZ6Z…zirzAsiVm</a></span>
+    <b>settled</b><span><a href="https://explorer.solana.com/tx/5VqdsEggCAqTjva2ufhe7kUFuuVUUYcKhwxoGwbkDryfSFHpr5X6sHxp8KTCTWW4GPGUmSLk3y1StkmBfmEUwiW?cluster=devnet">5VqdsEgg…mEUwiW</a></span>
+  </div>
+  <table>
+    <thead><tr><th style="width:16mm">Time</th><th style="width:52mm">Transition</th><th>Reason</th><th style="width:22mm">Actor</th></tr></thead>
+    <tbody>
+      <tr><td class="t">13:49:41</td><td class="tr">recorded</td><td>Order seen on the blockchain and recorded <span class="mono">event_ingested</span></td><td class="mono">listener</td></tr>
+      <tr><td class="t">13:49:41</td><td class="tr">recorded → broker_placing</td><td>Intent saved before the broker call <span class="mono">broker_intent_recorded</span></td><td class="mono">worker</td></tr>
+      <tr><td class="t">13:49:41</td><td class="tr">broker_placing → broker_placed</td><td>Broker accepted the trade <span class="mono">broker_accepted</span></td><td class="mono">worker</td></tr>
+      <tr><td class="t">13:49:45</td><td class="tr">broker_placed → filled</td><td>Broker filled the trade <span class="mono">broker_filled</span></td><td class="mono">worker</td></tr>
+      <tr><td class="t">13:49:46</td><td class="tr">filled → settling</td><td>Settling on-chain for the filled amount <span class="mono">settlement_started</span></td><td class="mono">worker</td></tr>
+      <tr><td class="t">13:49:46</td><td class="tr">settling</td><td>Settlement transaction signed and saved before sending <span class="mono">fulfill_tx_signed</span></td><td class="mono">worker</td></tr>
+      <tr><td class="t">13:49:47</td><td class="tr">settling</td><td>Chain emitted BuyOrderFulfilled <span class="mono">chain_event_BuyOrderFulfilled</span></td><td class="mono">listener</td></tr>
+      <tr><td class="t">13:49:48</td><td class="tr">settling → settled</td><td>Settlement confirmed <span class="mono">fulfill_confirmed</span></td><td class="mono">worker</td></tr>
+    </tbody>
+  </table>
+  <p>Two rows are the crash-safety mechanism: the intent is written before the broker is called, and the settlement signature is persisted before it is sent. A worker that dies after either point resumes from the ledger, never from memory.</p>
+  <div class="footer"><span>Spout · settlement worker</span><span>manual run · 2026-09-07</span><span>3</span></div>
+</section>
+
+<section class="page">
+  <p class="k">03 · Broker outage</p>
+  <h2>Thirty seconds of errors cost latency, not money.</h2>
+  <div class="meta">
+    <b>order</b><span>1788789130716 · AAPL · 5.00 USDC · placed while the simulator answered HTTP 500</span>
+    <b>broker</b><span>81819e9c-779d-4542-af1c-df1947484b7b · filled 5.000000</span>
+    <b>settled</b><span><a href="https://explorer.solana.com/tx/5P68oHmq2xUHtoEPwzBqw4BggzwbsPyH7BfRVQ6cC3bfKMe3rVeyZN2sEDCEU9Y1V3iAw5mmGbJ1apjGB85ey8HM?cluster=devnet">5P68oHmq…85ey8HM</a></span>
+  </div>
+  <table>
+    <thead><tr><th style="width:16mm">Time</th><th style="width:52mm">Transition</th><th>Reason</th><th style="width:22mm">Actor</th></tr></thead>
+    <tbody>
+      <tr><td class="t">13:52:11</td><td class="tr">recorded</td><td>Order recorded</td><td class="mono">listener</td></tr>
+      <tr><td class="t">13:52:12</td><td class="tr">recorded → broker_placing</td><td>Intent saved</td><td class="mono">worker</td></tr>
+      <tr><td class="t">13:52:12</td><td class="tr">broker_placing</td><td>Broker 500 · retry 1, wait 1.1 s</td><td class="mono">worker</td></tr>
+      <tr><td class="t">13:52:14</td><td class="tr">broker_placing</td><td>Broker 500 · retry 2, wait 2.1 s</td><td class="mono">worker</td></tr>
+      <tr><td class="t">13:52:17</td><td class="tr">broker_placing</td><td>Broker 500 · retry 3, wait 3.9 s</td><td class="mono">worker</td></tr>
+      <tr><td class="t">13:52:21</td><td class="tr">broker_placing</td><td>Broker 500 · retry 4, wait 8.1 s</td><td class="mono">worker</td></tr>
+      <tr><td class="t">13:52:29</td><td class="tr">broker_placing</td><td>Broker 500 · retry 5, wait 18.7 s</td><td class="mono">worker</td></tr>
+      <tr><td class="t">13:52:49</td><td class="tr">broker_placing → broker_placed</td><td>Outage over, broker accepted</td><td class="mono">worker</td></tr>
+      <tr><td class="t">13:52:53</td><td class="tr">broker_placed → filled</td><td>Broker filled</td><td class="mono">worker</td></tr>
+      <tr><td class="t">13:52:58</td><td class="tr">settling → settled</td><td>Settlement confirmed (signed 13:52:56, chain event 13:52:56)</td><td class="mono">worker</td></tr>
+    </tbody>
+  </table>
+  <p>A 500 is classified transient: exponential backoff with jitter, at most ten consecutive failures, no refund, and the attempt counter resets once the broker answers. The order was never in danger of being traded twice, because the same deterministic <span class="mono">client_order_id</span> was sent every time.</p>
+  <div class="footer"><span>Spout · settlement worker</span><span>manual run · 2026-09-07</span><span>4</span></div>
+</section>
+
+<section class="page">
+  <p class="k">04 · Market closed</p>
+  <h2>A permanent refusal is not retried. It is refunded.</h2>
+  <div class="meta">
+    <b>order</b><span>1788789513875 · AAPL · 5.00 USDC · simulator in market_closed mode</span>
+    <b>broker</b><span>no broker order exists · rejection code market_closed</span>
+    <b>refunded</b><span><a href="https://explorer.solana.com/tx/3sL1n55Wyectnck6F7SUc7Qajr7E21xTYu8PijN1obpnttGdG8AbfPrfyfkEcU9cQBT47psxafzwmA1RWbXys4er?cluster=devnet">3sL1n55W…RWbXys4er</a></span>
+  </div>
+  <table>
+    <thead><tr><th style="width:16mm">Time</th><th style="width:52mm">Transition</th><th>Reason</th><th style="width:22mm">Actor</th></tr></thead>
+    <tbody>
+      <tr><td class="t">13:58:35</td><td class="tr">recorded</td><td>Order recorded</td><td class="mono">listener</td></tr>
+      <tr><td class="t">13:58:35</td><td class="tr">recorded → broker_placing</td><td>Intent saved</td><td class="mono">worker</td></tr>
+      <tr><td class="t">13:58:35</td><td class="tr">broker_placing → refunding</td><td>Broker refused for good · <span class="chip warn">market_closed</span></td><td class="mono">worker</td></tr>
+      <tr><td class="t">13:58:36</td><td class="tr">refunding</td><td>Refund transaction signed and saved before sending</td><td class="mono">worker</td></tr>
+      <tr><td class="t">13:58:36</td><td class="tr">refunding</td><td>Chain emitted BuyOrderRefunded</td><td class="mono">listener</td></tr>
+      <tr><td class="t">13:58:38</td><td class="tr">refunding → refunded</td><td>Refund confirmed</td><td class="mono">worker</td></tr>
+    </tbody>
+  </table>
+  <p>The difference with step 3 is one classification: a 500 is transient, a market closure is permanent. The permanent path never waits; <span class="mono">refund_buy_order</span> closes the on-chain ticket and the order ends in its own terminal state, distinct from a dead letter.</p>
+  <div class="footer"><span>Spout · settlement worker</span><span>manual run · 2026-09-07</span><span>5</span></div>
+</section>
+
+<section class="page">
+  <p class="k">05 · Kill switch</p>
+  <h2>Pause loses nothing. Resume drains everything.</h2>
+  <div class="meta">
+    <b>order</b><span>1788789621374 · AAPL · 5.00 USDC · placed while the workers were paused</span>
+    <b>broker</b><span>0f591089-b06e-4427-8447-9f6378db2661 · filled 5.000000</span>
+    <b>settled</b><span><a href="https://explorer.solana.com/tx/45NXgGkzgVRez4duzGW5otthRTdmSwsddZMekRrYVsnjuQkPbwsCbSEUfXMU8dd2YJeM2gti2kZ9K9eGaKAxu4Zq?cluster=devnet">45NXgGkz…GaKAxu4Zq</a></span>
+  </div>
+  <table>
+    <thead><tr><th style="width:16mm">Time</th><th style="width:52mm">Transition</th><th>Reason</th><th style="width:22mm">Actor</th></tr></thead>
+    <tbody>
+      <tr><td class="t">14:00:22</td><td class="tr">recorded</td><td>Order recorded · workers paused, nothing else happens for 4 min 47 s</td><td class="mono">listener</td></tr>
+      <tr><td class="t">14:05:09</td><td class="tr">recorded → broker_placing</td><td>Resume · intent saved</td><td class="mono">worker</td></tr>
+      <tr><td class="t">14:05:09</td><td class="tr">broker_placing → broker_placed</td><td>Broker accepted</td><td class="mono">worker</td></tr>
+      <tr><td class="t">14:05:14</td><td class="tr">broker_placed → filled</td><td>Broker filled</td><td class="mono">worker</td></tr>
+      <tr><td class="t">14:05:16</td><td class="tr">settling → settled</td><td>Settlement confirmed (signed 14:05:14, chain event 14:05:15)</td><td class="mono">worker</td></tr>
+    </tbody>
+  </table>
+  <p>The switch is a row in Postgres read by every worker before it claims work, so all replicas obey it at once. It is the operator's incident tool, and the same switch the circuit breaker throws after a burst of critical alerts.</p>
+  <div class="footer"><span>Spout · settlement worker</span><span>manual run · 2026-09-07</span><span>6</span></div>
+</section>
+
+<section class="page">
+  <p class="k">06 · Reconciliation</p>
+  <h2>Three sources of truth, compared on demand.</h2>
+  <p><span class="mono">POST /reconcile</span> at 14:06:24 answered <span class="mono">scanned=9, no drift</span>. For every terminal order the PendingOrder PDA was closed on-chain; no open order was waiting on a broker state the database did not know. The same job runs unattended every 60 seconds on the hosted stack, and its repairs, when any, land in the ledger with a <span class="mono">reconciled_</span> reason.</p>
+
+  <p class="k" style="margin-top:10mm">07 · Idempotent replay</p>
+  <h2>The same event, three more times. Nothing moves.</h2>
+  <div class="meta">
+    <b>order</b><span>1788788980019 · the step 2 order, already settled</span>
+    <b>replayed</b><span>its BuyOrderCreated transaction, decoded from the logs stored in raw_events (origin: db)</span>
+  </div>
+  <table>
+    <thead><tr><th style="width:16mm">Time</th><th style="width:52mm">Status</th><th>Reason</th><th style="width:22mm">Actor</th></tr></thead>
+    <tbody>
+      <tr><td class="t">14:26:29</td><td class="tr">settled</td><td>Same event received again; nothing changed <span class="mono">duplicate_event_ignored</span></td><td class="mono">replay</td></tr>
+      <tr><td class="t">14:26:32</td><td class="tr">settled</td><td>Same event received again; nothing changed</td><td class="mono">replay</td></tr>
+      <tr><td class="t">14:26:33</td><td class="tr">settled</td><td>Same event received again; nothing changed</td><td class="mono">replay</td></tr>
+    </tbody>
+  </table>
+  <p>After the replays the order still has one <span class="mono">settled</span> transition and the same settlement signature, and the broker still holds exactly one order for its <span class="mono">client_order_id</span>. The primary keys of <span class="mono">raw_events</span> and <span class="mono">orders</span> make the duplicate harmless before any worker sees it.</p>
+  <div class="note" style="margin-top:8mm">
+    <p class="k">Not covered by this manual run</p>
+    Scenario B (worker killed between broker-accept and the database write) and scenario D (settlement confirmation lost, retry hits Anchor error 3012) require killing a process and are run by <span class="mono">pnpm scenario b</span> and <span class="mono">pnpm scenario d</span>. Scenario G (real Alpaca sandbox) needs US market hours; its evidence is added to the README when it runs.
+  </div>
+  <p class="k" style="margin-top:8mm">Verification</p>
+  <p>Every order above can be queried at <span class="mono">GET /orders/BLcWH9MWxKkFNNZj7mBm3vF7aiZieG3BnZMWXtoiktoC/&lt;orderId&gt;/events</span> on the API, and every signature opens on the devnet explorer.</p>
+  <div class="footer"><span>Spout · settlement worker</span><span>manual run · 2026-09-07</span><span>7</span></div>
+</section>
+
+</body>
+</html>
